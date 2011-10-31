@@ -1,0 +1,87 @@
+                     NVECTOR_PARALLEL_CUDA
+	Ben Cumming, Quennsland University of Technology 2010
+
+This code is a modification of the NVECTOR_PARALLEL code developed
+at LLNL[1-5], which was distributed under the BSD-stule license (see the
+LICENSE file for more information). Similarly, this code developed
+by Ben Cumming is also licensed under a BSD-style license.
+
+The code is based on the SUNDIALS 2.4.0.
+The code only supports double at the moment.
+
+MPI parallel implementation of the NVECTOR module for SUNDIAL, with CUDA
+used for local data-parallel operations.
+
+The following points apply to the original NVECTOR_PARALLEL implementionat
+at LLLNL[1]:
+
+NVECTOR_PARALLEL defines the content field of N_Vector to be a structure 
+containing the global and local lengths of the vector, a pointer to the 
+beginning of a contiguous local data array, an MPI communicator, and a 
+boolean flag indicating ownership of the data array.
+
+NVECTOR_PARALLEL defines seven macros to provide access to the content of 
+a parallel N_Vector, several constructors for variables of type N_Vector,
+a constructor for an array of variables of type N_Vector, and destructors
+for N_Vector and N_Vector array.
+
+NVECTOR_PARALLEL provides implementations for all vector operations defined
+by the generic NVECTOR module in the table of operations.
+
+NVECTOR_PARALLEL_CUDA extends NVECTOR_PARALLEL by storing the local vector
+data on a CUDA-enabled device. The pointer to local data is thus a pointer
+to memory on the device, not memory on the host.
+
+The following points are specific to the changes made to the origninal
+NVECTOR_PARALLEL implementation by NVECTOR_PARALLEL_CUDA:
+
+NVECTOR_PARALLEL_CUDA implements the vector operations in CUDA, so that all
+computation is performed on the device. The results of data-parallel
+operations, for example vector addition, are also stored on the device, so
+that there is not transfer of data between the device and the host.
+
+NVECTOR_PARALLEL_CUDA only transfers data from the device to the host
+for reduction operations such as dot products. Results of local reductions,
+a single scaler, are returned to the host and the same MPI reduction
+mechanism as NVECTOR_PARALLEL is used to perform the global reduction
+accross all processors.
+
+Because the local vector data is stored on the GPU, the user must take
+great care when using the pointer returned by N_VGetArrayPointer_Parallel(),
+which is a pointer to memory on the device, not the host. For this reason
+the dense solver and preconditioners that make use of this access mechanism
+will not work, and the user must provide their own preconditioner.
+
+A. Documentation
+----------------
+
+The MPI parallel NVECTOR implementation is fully described in the user documentation
+for any of the SUNDIALS solvers [1-5]. A PDF file for the user guide for a particular
+solver is available in the solver's subdirectory under doc/.
+
+
+B. Installation
+---------------
+
+For basic installation instructions see /sundials/INSTALL_NOTES. 
+For complete installation instructions see any of the user guides.
+
+
+C. References
+-------------
+
+[1] A. C. Hindmarsh and R. Serban, "User Documentation for CVODE v2.4.0," 
+    LLLNL technical report UCRL-MA-208108, November 2004.
+
+[2] A. C. Hindmarsh and R. Serban, "User Documentation for CVODES v2.4.0," 
+    LLNL technical report UCRL-MA-208111, November 2004.
+
+[3] A. C. Hindmarsh and R. Serban, "User Documentation for IDA v2.4.0," 
+    LLNL technical report UCRL-MA-208112, November 2004.
+
+[4] R. Serban and C. Petra,  "User Documentation for IDAS v1.0.0," 
+    LLNL technical report UCRL-SM-234051, August 2007.
+
+[5] A. M. Collier, A. C. Hindmarsh, R. Serban,and C. S. Woodward, "User 
+    Documentation for KINSOL v2.4.0," LLNL technical report UCRL-MA-208116, 
+    November 2004.
